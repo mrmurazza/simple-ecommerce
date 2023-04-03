@@ -59,7 +59,7 @@ func InitDatabase() {
 
 	err = DB.Exec("CREATE TABLE IF NOT EXISTS orders (" +
 		"`id` integer NOT NULL primary key, " +
-		"customer_id integer not null default , " +
+		"customer_id integer not null , " +
 		"status varchar(50) not null default ``, " +
 		"role varchar(50) not null, " +
 		"created_at datetime not null default current_timestamp, " +
