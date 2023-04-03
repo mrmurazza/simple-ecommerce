@@ -3,6 +3,7 @@ package impl
 import (
 	"ecommerce/domain/order"
 	"ecommerce/dto/request"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -71,7 +72,28 @@ func (s *service) Order(req request.CreateOrderRequest) error {
 		Units:       orderUnits,
 	}
 
-	return s.repo.SaveOrder(order)
+	return s.repo.SaveNewOrder(order)
+}
+
+func (s *service) CheckoutOrder(userId, orderId int) error {
+	o, err := s.repo.GetByIdAndUserId(userId, orderId)
+	if err != nil {
+		return err
+	}
+	if o == nil {
+		return errors.New("not found")
+	}
+
+	now := time.Now()
+	o.Status = order.StatusDone
+	o.UpdatedAt = &now
+
+	err = s.repo.UpdateOrder(o)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *service) GetOrderHistories(userId int) ([]order.Order, error) {

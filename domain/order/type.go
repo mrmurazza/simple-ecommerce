@@ -6,13 +6,16 @@ import (
 
 type Service interface {
 	Order(req request.CreateOrderRequest) error
+	CheckoutOrder(userId, orderId int) error
 	GetOrderHistories(userId int) ([]Order, error)
 	GetAllOrders() ([]Order, error)
 	GetAllProducts() ([]Product, error)
 }
 
 type Repository interface {
-	SaveOrder(o Order) error
+	SaveNewOrder(o Order) error
+	UpdateOrder(o *Order) error
+	GetByIdAndUserId(id, userId int) (*Order, error)
 	GetOrderByCustomer(userId int) ([]Order, error)
 	GetAllOrders() ([]Order, error)
 	GetAllProducts() ([]Product, error)

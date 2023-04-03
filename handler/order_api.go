@@ -4,6 +4,7 @@ import (
 	"ecommerce/domain/order"
 	"ecommerce/dto/request"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,6 +40,30 @@ func (h *OrderApiHandler) Order(c *gin.Context) {
 	}
 
 	err = h.orderSvc.Order(req)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+	})
+}
+
+func (h *OrderApiHandler) CheckoutOrder(c *gin.Context) {
+	userId, err := fetchUserId(c)
+	if userId == nil || err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	orderIdStr := c.Param("id")
+	orderId, err := strconv.Atoi(orderIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = h.orderSvc.CheckoutOrder(*userId, orderId)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return

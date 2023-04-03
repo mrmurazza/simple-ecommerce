@@ -16,7 +16,7 @@ func NewRepo(db *gorm.DB) order.Repository {
 	}
 }
 
-func (r *repo) SaveOrder(o order.Order) error {
+func (r *repo) SaveNewOrder(o order.Order) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		res := tx.Create(&o)
 
@@ -69,6 +69,31 @@ func (r *repo) GetOrderByCustomer(userId int) ([]order.Order, error) {
 
 	orders = r.assignOrderUnits(orders, orderUnits)
 	return orders, nil
+}
+
+func (r *repo) UpdateOrder(o *order.Order) error {
+
+	err := r.db.Save(&o).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *repo) GetByIdAndUserId(id, userId int) (*order.Order, error) {
+	var order order.Order
+
+	err := r.db.Model(order).
+		Where("id = ?", id).
+		Where("customer_id = ?", userId).
+		First(&order).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &order, nil
 }
 
 func (r *repo) getOrderUnitsByOrders(orders []order.Order) ([]order.OrderUnit, error) {
