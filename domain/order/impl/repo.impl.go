@@ -2,7 +2,6 @@ package impl
 
 import (
 	"ecommerce/domain/order"
-	"ecommerce/domain/user"
 
 	"github.com/jinzhu/gorm"
 )
@@ -60,11 +59,11 @@ func (r *repo) decraseProductStock(productQtyMap map[int]int) error {
 	return nil
 }
 
-func (r *repo) GetOrderByCustomer(u user.User) ([]order.Order, error) {
+func (r *repo) GetOrderByCustomer(userId int) ([]order.Order, error) {
 	var orders []order.Order
 
 	err := r.db.Model(order.Order{}).
-		Where("customer_id = ?", u.ID).
+		Where("customer_id = ?", userId).
 		Order("created_at DESC").
 		Find(&orders).
 		Error

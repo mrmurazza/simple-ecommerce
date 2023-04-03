@@ -2,7 +2,6 @@ package impl
 
 import (
 	"ecommerce/domain/order"
-	"ecommerce/domain/user"
 	"ecommerce/dto/request"
 	"fmt"
 	"time"
@@ -75,8 +74,8 @@ func (s *service) Order(req request.CreateOrderRequest) error {
 	return s.repo.SaveOrder(order)
 }
 
-func (s *service) GetOrderHistories(u user.User) ([]order.Order, error) {
-	return s.GetOrderHistories(u)
+func (s *service) GetOrderHistories(userId int) ([]order.Order, error) {
+	return s.GetOrderHistories(userId)
 }
 
 func (s *service) GetAllOrders() ([]order.Order, error) {
