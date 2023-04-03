@@ -50,6 +50,7 @@ type Product struct {
 	Price       int
 	Description string
 	Image       string
+	Qty         int
 
 	CreatedAt *time.Time `gorm:"default:current_timestamp"`
 	UpdatedAt *time.Time `gorm:"default:current_timestamp"`

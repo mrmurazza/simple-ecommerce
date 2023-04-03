@@ -18,20 +18,43 @@ func NewRepo(db *gorm.DB) order.Repository {
 }
 
 func (r *repo) SaveOrder(o order.Order) error {
-	res := r.db.Create(&o)
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		res := r.db.Create(&o)
 
-	err := res.Error
-	if err != nil {
-		return err
-	}
+		err := res.Error
+		if err != nil {
+			return err
+		}
 
-	for _, unit := range o.Units {
-		unit.OrderId = o.ID
-	}
+		productQtyMap := make(map[int]int)
+		for _, unit := range o.Units {
+			unit.OrderId = o.ID
+			productQtyMap[unit.ProductId] = unit.Qty
+		}
 
-	res = r.db.Create(o.Units)
-	if err != nil {
-		return err
+		res = r.db.Create(o.Units)
+		if err != nil {
+			return err
+		}
+
+		err = r.decraseProductStock(productQtyMap)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r *repo) decraseProductStock(productQtyMap map[int]int) error {
+	for productId, qty := range productQtyMap {
+		err := r.db.Model(&order.Product{}).
+			Where("id = ?", productId).
+			UpdateColumn("qty", gorm.Expr("qty - ?", qty)).Error
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil
@@ -121,6 +144,24 @@ func (r *repo) GetAllProducts() ([]order.Product, error) {
 
 	err := r.db.Model(order.Product{}).
 		Order("created_at DESC").
+		Find(&products).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	if gorm.IsRecordNotFoundError(err) {
+		return nil, nil
+	}
+	return products, nil
+}
+
+func (r *repo) GetProductByIds(ids []int) ([]order.Product, error) {
+	var products []order.Product
+
+	err := r.db.Model(order.Product{}).
+		Order("created_at DESC").
+		Where("id in ?", ids).
 		Find(&products).
 		Error
 	if err != nil {
