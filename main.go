@@ -7,6 +7,7 @@ import (
 	"ecommerce/handler"
 	"ecommerce/pkg/auth"
 	"ecommerce/pkg/database"
+	"ecommerce/pkg/ratelimit"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,7 @@ func main() {
 
 	database.InitDatabase()
 
+	rateLimitSvc := ratelimit.NewRateLimitSvc()
 	// init auth & user service & repo
 	authSvc := auth.InitAuthService()
 	userRepo := userImpl.NewRepo(database.DB)
@@ -36,12 +38,13 @@ func main() {
 		v1.POST("/login", userApiHandler.Login)
 		v1.POST("/user", userApiHandler.CreateUser)
 
-		authorized := v1.Group("", authSvc.AuthenticateMiddleware())
+		authorized := v1.Group("", authSvc.AuthenticateMiddleware(), rateLimitSvc.RateLimitMiddleware())
 		authorized.POST("/orders", orderApiHandler.Order)
 		authorized.GET("/orders", orderApiHandler.GetOrderHistories)
 		authorized.GET("/products", orderApiHandler.GetAllProducts)
+		authorized.GET("/checkout", orderApiHandler.CheckoutOrder)
 
-		admin := v1.Group("", authSvc.AuthenticateAdmin())
+		admin := v1.Group("", authSvc.AuthenticateAdmin(), rateLimitSvc.RateLimitMiddleware())
 		admin.GET("/admin/orders", orderApiHandler.GetAllOrders)
 	}
 
@@ -63,7 +66,6 @@ func initWorker(orderSvc order.Service) {
 
 		if err != nil {
 			fmt.Print("Error running jobs remind pending order")
-			// 	logger.Infof("Error Publish By Cron err : %v", err)
 		}
 	})
 
