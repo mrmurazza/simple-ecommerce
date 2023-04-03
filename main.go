@@ -29,6 +29,9 @@ func main() {
 
 		authorized := v1.Group("", authSvc.AuthenticateMiddleware())
 		authorized.GET("/check-auth", apiHandler.CheckAuth)
+
+		admin := v1.Group("", authSvc.AuthenticateAdmin())
+		admin.GET("/check-admin", apiHandler.CheckAuth)
 	}
 
 	r.GET("/ping", func(c *gin.Context) {

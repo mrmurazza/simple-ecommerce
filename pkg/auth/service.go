@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"ecommerce/config"
+	"ecommerce/domain/user"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -26,40 +27,70 @@ func InitAuthService() *service {
 	}
 }
 
+func (s *service) Authenticate(c *gin.Context) {
+	cfg := config.Get()
+	authorizationHeader := c.GetHeader("Authorization")
+	if !strings.Contains(authorizationHeader, "Bearer") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	tokenString := strings.Replace(authorizationHeader, "Bearer ", "", -1)
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if method, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("signing method invalid")
+		} else if method != s.JwtSigningMethod {
+			return nil, fmt.Errorf("signing method invalid")
+		}
+
+		key := []byte(cfg.JWTSignatureKey)
+		return key, nil
+	})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.Set("userInfo", claims["data"])
+}
+
 func (s *service) AuthenticateMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		cfg := config.Get()
-		authorizationHeader := c.GetHeader("Authorization")
-		if !strings.Contains(authorizationHeader, "Bearer") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid token"})
-			return
-		}
+		s.Authenticate(c)
+		c.Next()
+	}
+}
 
-		tokenString := strings.Replace(authorizationHeader, "Bearer ", "", -1)
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if method, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("signing method invalid")
-			} else if method != s.JwtSigningMethod {
-				return nil, fmt.Errorf("signing method invalid")
-			}
-
-			key := []byte(cfg.JWTSignatureKey)
-			return key, nil
-		})
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+func (s *service) AuthenticateAdmin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		s.Authenticate(c)
+		val, exist := c.Get("userInfo")
+		if !exist {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || !token.Valid {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		userInfo, ok := val.(map[string]string)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+		if userInfo["role"] != string(user.RoleAdmin) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "role insufficient"})
 			c.Abort()
 			return
 		}
 
-		c.Set("userInfo", claims["data"])
 		c.Next()
 	}
 }
