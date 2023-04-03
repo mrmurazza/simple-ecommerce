@@ -28,7 +28,7 @@ type Order struct {
 	CreatedAt *time.Time `gorm:"default:current_timestamp"`
 	UpdatedAt *time.Time `gorm:"default:current_timestamp"`
 
-	Units []OrderUnit
+	Units []OrderUnit `gorm:"-"`
 }
 
 type OrderUnit struct {

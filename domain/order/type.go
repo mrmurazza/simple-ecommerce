@@ -13,7 +13,7 @@ type Service interface {
 
 type Repository interface {
 	SaveOrder(o Order) error
-	GetOrderByCustomer(u user.User) ([]*Order, error)
-	GetAllOrders() ([]*Order, error)
-	GetAllProducts() ([]*Product, error)
+	GetOrderByCustomer(u user.User) ([]Order, error)
+	GetAllOrders() ([]Order, error)
+	GetAllProducts() ([]Product, error)
 }
