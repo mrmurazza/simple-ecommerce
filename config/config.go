@@ -18,7 +18,7 @@ type Config struct {
 	JWTExpiryDuration time.Duration `envconfig:"JWT_EXPIRY" default:"1h"`
 	JWTSignatureKey   string        `envconfig:"JWT_SIGN_KEY" default:"this is a secret"`
 
-	DBHost string `envconfig:"DB_HOST" default:"ecommerce.db"`
+	DBHost string `envconfig:"DB_HOST" default:"/Users/m.r.murazza/Project/personal/simple-ecommerce/ecommerce.db"`
 }
 
 func Get() *Config {

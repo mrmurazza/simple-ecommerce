@@ -13,11 +13,6 @@ var DB *gorm.DB
 func InitDatabase() {
 	cfg := config.Get()
 
-	// dbResourceName := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
-	// if cfg.DBDriver == "sqlite3" {
-	// 	dbResourceName = cfg.DBHost
-	// }
-
 	db, err := gorm.Open(sqlite.Open(cfg.DBHost), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
