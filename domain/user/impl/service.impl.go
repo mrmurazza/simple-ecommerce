@@ -39,13 +39,13 @@ func (s *service) CreateUserIfNotAny(req request.CreateUserRequest) (*user.User,
 
 	password := s.authSvc.GeneratePassword(4)
 	u := &user.User{
-		Phonenumber: req.Phonenumber,
-		Name:        req.Name,
-		Password:    s.authSvc.EncryptPassword(password),
-		Role:        role,
+		Email:    req.Email,
+		Name:     req.Name,
+		Password: s.authSvc.EncryptPassword(password),
+		Role:     role,
 	}
 
-	existingUser, err := s.repo.GetUserByPhonenumber(req.Phonenumber)
+	existingUser, err := s.repo.GetUserByEmail(req.Email)
 	if existingUser != nil {
 		return nil, errors.New("user with this phonenumber already exist")
 	}
@@ -64,9 +64,9 @@ func (s *service) CreateUserIfNotAny(req request.CreateUserRequest) (*user.User,
 	return u, nil
 }
 
-func (s *service) Login(phonenumber, password string) (*user.User, string, error) {
+func (s *service) Login(email, password string) (*user.User, string, error) {
 
-	u, err := s.repo.GetUserByUserPass(phonenumber, s.authSvc.EncryptPassword(password))
+	u, err := s.repo.GetUserByUserPass(email, s.authSvc.EncryptPassword(password))
 	if u == nil {
 		return nil, "", nil
 	}
@@ -75,10 +75,10 @@ func (s *service) Login(phonenumber, password string) (*user.User, string, error
 	}
 
 	claims := map[string]interface{}{
-		"phonenumber": u.Phonenumber,
-		"name":        u.Name,
-		"role":        u.Role,
-		"timestamp":   u.CreatedAt.UTC().Unix(),
+		"email":     u.Email,
+		"name":      u.Name,
+		"role":      u.Role,
+		"timestamp": u.CreatedAt.UTC().Unix(),
 	}
 	token, err := s.authSvc.TokenizeData(claims)
 	if err != nil {

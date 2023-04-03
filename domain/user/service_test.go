@@ -41,24 +41,24 @@ func init() {
 
 func TestCreateUserIfNotAny(test *testing.T) {
 	req := request.CreateUserRequest{
-		Phonenumber: "123456",
-		Name:        "User-123",
-		Role:        "ADMIN",
+		Email: "123456",
+		Name:  "User-123",
+		Role:  "ADMIN",
 	}
 
 	u := &user.User{
-		Name:        "User-123",
-		Phonenumber: "123456",
-		Password:    "ASDF",
-		Role:        user.RoleAdmin,
+		Name:     "User-123",
+		Email:    "123456",
+		Password: "ASDF",
+		Role:     user.RoleAdmin,
 	}
 
 	userWithId := &user.User{
-		ID:          1,
-		Name:        "User-123",
-		Phonenumber: "123456",
-		Password:    "QWER",
-		Role:        user.RoleAdmin,
+		ID:       1,
+		Name:     "User-123",
+		Email:    "123456",
+		Password: "QWER",
+		Role:     user.RoleAdmin,
 	}
 
 	test.Run("error role not valid", func(t *testing.T) {
@@ -128,10 +128,10 @@ func TestLogin(test *testing.T) {
 	createdAt := time.Unix(ts, 0)
 
 	u := &user.User{
-		Phonenumber: phonenumber,
-		Name:        "USER-123",
-		Role:        user.RoleAdmin,
-		CreatedAt:   &createdAt,
+		Email:     phonenumber,
+		Name:      "USER-123",
+		Role:      user.RoleAdmin,
+		CreatedAt: &createdAt,
 	}
 
 	claims := map[string]interface{}{

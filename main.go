@@ -16,11 +16,11 @@ func main() {
 
 	// init service & repo
 	authSvc := auth.InitAuthService()
-	itemRepo := userImpl.NewRepo(database.DB)
-	itemSvc := userImpl.NewService(itemRepo, authSvc)
+	userRepo := userImpl.NewRepo(database.DB)
+	userSvc := userImpl.NewService(userRepo, authSvc)
 
 	// init handler
-	apiHandler := handler.NewApiHandler(itemSvc)
+	apiHandler := handler.NewUserApiHandler(userSvc)
 
 	v1 := r.Group("/api/v1")
 	{

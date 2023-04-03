@@ -30,9 +30,9 @@ func (r *repo) Persist(u *user.User) (*user.User, error) {
 
 }
 
-func (r *repo) GetUserByUserPass(phonenumber, password string) (*user.User, error) {
+func (r *repo) GetUserByUserPass(email, password string) (*user.User, error) {
 	u := user.User{}
-	err := r.db.Model(user.User{}).Where("phonenumber = ? AND password = ?", phonenumber, password).First(&u).Error
+	err := r.db.Model(user.User{}).Where("email = ? AND password = ?", email, password).First(&u).Error
 	if err != nil {
 		return nil, err
 	}
@@ -44,9 +44,9 @@ func (r *repo) GetUserByUserPass(phonenumber, password string) (*user.User, erro
 	return &u, nil
 }
 
-func (r *repo) GetUserByPhonenumber(phonenumber string) (*user.User, error) {
+func (r *repo) GetUserByEmail(email string) (*user.User, error) {
 	u := user.User{}
-	err := r.db.Model(user.User{}).Where("phonenumber = ?", phonenumber).First(&u).Error
+	err := r.db.Model(user.User{}).Where("email = ?", email).First(&u).Error
 	if gorm.IsRecordNotFoundError(err) {
 		return nil, nil
 	}

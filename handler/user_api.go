@@ -8,17 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ApiHandler struct {
+type UserApiHandler struct {
 	userSvc user.Service
 }
 
-func NewApiHandler(userSvc user.Service) *ApiHandler {
-	return &ApiHandler{
+func NewUserApiHandler(userSvc user.Service) *UserApiHandler {
+	return &UserApiHandler{
 		userSvc: userSvc,
 	}
 }
 
-func (h *ApiHandler) Login(c *gin.Context) {
+func (h *UserApiHandler) Login(c *gin.Context) {
 	var req request.LoginRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -26,7 +26,7 @@ func (h *ApiHandler) Login(c *gin.Context) {
 		return
 	}
 
-	u, signedToken, err := h.userSvc.Login(req.Phonenumber, req.Password)
+	u, signedToken, err := h.userSvc.Login(req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
@@ -43,7 +43,7 @@ func (h *ApiHandler) Login(c *gin.Context) {
 	})
 }
 
-func (h *ApiHandler) CheckAuth(c *gin.Context) {
+func (h *UserApiHandler) CheckAuth(c *gin.Context) {
 	userInfo, ok := c.Get("userInfo")
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "userinfo not filled"})
@@ -56,7 +56,7 @@ func (h *ApiHandler) CheckAuth(c *gin.Context) {
 	})
 }
 
-func (h *ApiHandler) CreateUser(c *gin.Context) {
+func (h *UserApiHandler) CreateUser(c *gin.Context) {
 	var req request.CreateUserRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
