@@ -18,6 +18,6 @@ func fetchUserId(c *gin.Context) (*int, error) {
 		return nil, errors.New("malformed auth metadata")
 	}
 
-	userId := (userInfo["id"]).(int)
+	userId := int((userInfo["id"]).(float64))
 	return &userId, nil
 }
