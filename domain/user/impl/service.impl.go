@@ -75,6 +75,7 @@ func (s *service) Login(email, password string) (*user.User, string, error) {
 	}
 
 	claims := map[string]interface{}{
+		"id":        u.ID,
 		"email":     u.Email,
 		"name":      u.Name,
 		"role":      u.Role,
