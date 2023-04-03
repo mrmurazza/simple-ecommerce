@@ -1,6 +1,7 @@
 package main
 
 import (
+	orderImpl "ecommerce/domain/order/impl"
 	userImpl "ecommerce/domain/user/impl"
 	"ecommerce/handler"
 	"ecommerce/pkg/auth"
@@ -14,24 +15,31 @@ func main() {
 
 	database.InitDatabase()
 
-	// init service & repo
+	// init auth & user service & repo
 	authSvc := auth.InitAuthService()
 	userRepo := userImpl.NewRepo(database.DB)
 	userSvc := userImpl.NewService(userRepo, authSvc)
 
+	// ini order service & repo
+	orderRepo := orderImpl.NewRepo(database.DB)
+	orderSvc := orderImpl.NewService(orderRepo)
+
 	// init handler
-	apiHandler := handler.NewUserApiHandler(userSvc)
+	userApiHandler := handler.NewUserApiHandler(userSvc)
+	orderApiHandler := handler.NewOrderApiHandler(orderSvc)
 
 	v1 := r.Group("/api/v1")
 	{
-		v1.POST("/login", apiHandler.Login)
-		v1.POST("/user", apiHandler.CreateUser)
+		v1.POST("/login", userApiHandler.Login)
+		v1.POST("/user", userApiHandler.CreateUser)
 
 		authorized := v1.Group("", authSvc.AuthenticateMiddleware())
-		authorized.GET("/check-auth", apiHandler.CheckAuth)
+		authorized.POST("/orders", orderApiHandler.Order)
+		authorized.GET("/orders", orderApiHandler.GetOrderHistories)
+		authorized.GET("/products", orderApiHandler.GetAllProducts)
 
 		admin := v1.Group("", authSvc.AuthenticateAdmin())
-		admin.GET("/check-admin", apiHandler.CheckAuth)
+		admin.GET("/admin/orders", orderApiHandler.GetAllOrders)
 	}
 
 	r.GET("/ping", func(c *gin.Context) {
