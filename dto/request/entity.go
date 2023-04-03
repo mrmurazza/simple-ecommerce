@@ -18,13 +18,13 @@ type (
 	}
 
 	CreateOrderRequest struct {
-		UserId   int
-		Products []*CreateOrderRequestDetail
+		UserId   int                         `json:"user_id"`
+		Products []*CreateOrderRequestDetail `json:"products"`
 	}
 
 	CreateOrderRequestDetail struct {
-		ProductId int
-		Qty       int
+		ProductId int `json:"product_id"`
+		Qty       int `json:"qty"`
 	}
 )
 

@@ -75,7 +75,7 @@ func (s *service) Order(req request.CreateOrderRequest) error {
 }
 
 func (s *service) GetOrderHistories(userId int) ([]order.Order, error) {
-	return s.GetOrderHistories(userId)
+	return s.repo.GetOrderByCustomer(userId)
 }
 
 func (s *service) GetAllOrders() ([]order.Order, error) {
@@ -83,5 +83,5 @@ func (s *service) GetAllOrders() ([]order.Order, error) {
 }
 
 func (s *service) GetAllProducts() ([]order.Product, error) {
-	return s.GetAllProducts()
+	return s.repo.GetAllProducts()
 }
