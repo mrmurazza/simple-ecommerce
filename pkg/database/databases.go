@@ -61,7 +61,8 @@ func InitDatabase() {
 		"`id` integer NOT NULL primary key, " +
 		"customer_id integer not null , " +
 		"status varchar(50) not null default ``, " +
-		"role varchar(50) not null, " +
+		"total_qty integer not null, " +
+		"total_price integer not null, " +
 		"created_at datetime not null default current_timestamp, " +
 		"updated_at datetime not null default current_timestamp, " +
 		"FOREIGN KEY (customer_id) REFERENCES customers(id)" +
