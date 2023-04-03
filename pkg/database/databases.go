@@ -29,15 +29,59 @@ func InitDatabase() {
 	DB.LogMode(true)
 	DB.SingularTable(false)
 
-	err = DB.Exec("CREATE TABLE IF NOT EXISTS users (" +
+	err = DB.Exec("CREATE TABLE IF NOT EXISTS customers (" +
 		"`id` integer NOT NULL primary key, " +
-		"phonenumber varchar(13) not null default ``, " +
+		"email varchar(50) not null default ``, " +
 		"name varchar(50) not null default ``, " +
 		"password varchar(50) not null default ``, " +
 		"role varchar(50) not null, " +
 		"created_at datetime not null default current_timestamp, " +
+		"updated_at datetime not null default current_timestamp " +
+		")").Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = DB.Exec("CREATE TABLE IF NOT EXISTS products (" +
+		"`id` integer NOT NULL primary key, " +
+		"name varchar(50) not null default ``, " +
+		"price integer not null default ``, " +
+		"description varchar(50) not null default ``, " +
+		"image varchar(50) not null default ``, " +
+		"created_at datetime not null default current_timestamp, " +
+		"updated_at datetime not null default current_timestamp " +
+		")").Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = DB.Exec("CREATE TABLE IF NOT EXISTS orders (" +
+		"`id` integer NOT NULL primary key, " +
+		"customer_id integer not null default , " +
+		"status varchar(50) not null default ``, " +
+		"role varchar(50) not null, " +
+		"created_at datetime not null default current_timestamp, " +
 		"updated_at datetime not null default current_timestamp, " +
-		"deleted_at datetime default null" +
+		"FOREIGN KEY (customer_id) REFERENCES customers(id)" +
+		")").Error
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = DB.Exec("CREATE TABLE IF NOT EXISTS order_units (" +
+		"`id` integer NOT NULL primary key, " +
+		"order_id integer not null, " +
+		"product_id integer not null, " +
+		"qty integer not null default 1, " +
+		"price integer not null default 0, " +
+		"name varchar(50) not null default ``, " +
+		"description varchar(50) not null default ``, " +
+		"image varchar(50) not null default ``, " +
+		"created_at datetime not null default current_timestamp, " +
+		"FOREIGN KEY (order_id) REFERENCES orders(id)" +
 		")").Error
 
 	if err != nil {
