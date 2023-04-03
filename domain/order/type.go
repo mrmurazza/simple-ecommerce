@@ -6,9 +6,9 @@ import (
 
 type Service interface {
 	Order(u user.User) error
-	GetOrderHistories(u user.User) ([]*Order, error)
-	GetAllOrders() ([]*Order, error)
-	GetAllProducts() ([]*Product, error)
+	GetOrderHistories(u user.User) ([]Order, error)
+	GetAllOrders() ([]Order, error)
+	GetAllProducts() ([]Product, error)
 }
 
 type Repository interface {
