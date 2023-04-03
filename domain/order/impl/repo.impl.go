@@ -50,6 +50,16 @@ func (r *repo) SaveNewOrder(o order.Order) error {
 	})
 }
 
+func (r *repo) UpdateOrder(o *order.Order) error {
+
+	err := r.db.Save(&o).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *repo) GetOrderByCustomer(userId int) ([]order.Order, error) {
 	var orders []order.Order
 
@@ -69,31 +79,6 @@ func (r *repo) GetOrderByCustomer(userId int) ([]order.Order, error) {
 
 	orders = r.assignOrderUnits(orders, orderUnits)
 	return orders, nil
-}
-
-func (r *repo) UpdateOrder(o *order.Order) error {
-
-	err := r.db.Save(&o).Error
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *repo) GetByIdAndUserId(id, userId int) (*order.Order, error) {
-	var order order.Order
-
-	err := r.db.Model(order).
-		Where("id = ?", id).
-		Where("customer_id = ?", userId).
-		First(&order).
-		Error
-	if err != nil {
-		return nil, err
-	}
-
-	return &order, nil
 }
 
 func (r *repo) getOrderUnitsByOrders(orders []order.Order) ([]order.OrderUnit, error) {
@@ -136,6 +121,45 @@ func (r *repo) assignOrderUnits(orders []order.Order, orderUnits []order.OrderUn
 	}
 
 	return orders
+}
+
+func (r *repo) GetByIdAndUserId(id, userId int) (*order.Order, error) {
+	var order order.Order
+
+	err := r.db.Model(order).
+		Where("id = ?", id).
+		Where("customer_id = ?", userId).
+		First(&order).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &order, nil
+}
+
+func (r *repo) GetByStatus(status order.Status, full bool) ([]order.Order, error) {
+	var orders []order.Order
+
+	err := r.db.Model(orders).
+		Where("status = ?", status).
+		Find(&orders).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	if !full {
+		return orders, nil
+	}
+
+	orderUnits, err := r.getOrderUnitsByOrders(orders)
+	if err != nil {
+		return nil, err
+	}
+
+	orders = r.assignOrderUnits(orders, orderUnits)
+	return orders, nil
 }
 
 func (r *repo) GetAllOrders() ([]order.Order, error) {

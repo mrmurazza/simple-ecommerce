@@ -10,6 +10,8 @@ type Service interface {
 	GetOrderHistories(userId int) ([]Order, error)
 	GetAllOrders() ([]Order, error)
 	GetAllProducts() ([]Product, error)
+
+	RemindPendingOrder() error
 }
 
 type Repository interface {
@@ -17,6 +19,7 @@ type Repository interface {
 	UpdateOrder(o *Order) error
 	GetByIdAndUserId(id, userId int) (*Order, error)
 	GetOrderByCustomer(userId int) ([]Order, error)
+	GetByStatus(status Status, full bool) ([]Order, error)
 	GetAllOrders() ([]Order, error)
 	GetAllProducts() ([]Product, error)
 	GetProductByIds(ids []int) ([]Product, error)

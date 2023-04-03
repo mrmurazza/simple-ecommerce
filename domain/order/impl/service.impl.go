@@ -2,19 +2,23 @@ package impl
 
 import (
 	"ecommerce/domain/order"
+	"ecommerce/domain/user"
 	"ecommerce/dto/request"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
 type service struct {
-	repo order.Repository
+	repo    order.Repository
+	userSvc user.Service
 }
 
-func NewService(repo order.Repository) order.Service {
+func NewService(repo order.Repository, userSvc user.Service) order.Service {
 	return &service{
-		repo: repo,
+		repo:    repo,
+		userSvc: userSvc,
 	}
 }
 
@@ -106,4 +110,57 @@ func (s *service) GetAllOrders() ([]order.Order, error) {
 
 func (s *service) GetAllProducts() ([]order.Product, error) {
 	return s.repo.GetAllProducts()
+}
+
+func (s *service) RemindPendingOrder() error {
+	pendingOrders, err := s.repo.GetByStatus(order.StatusPending, true)
+	if err != nil {
+		return nil
+	}
+
+	userIds := make([]int, 0)
+	orderByUserIds := make(map[int][]*order.Order)
+	for _, po := range pendingOrders {
+		userIds = append(userIds, po.CustomerId)
+
+		if _, ok := orderByUserIds[po.CustomerId]; !ok {
+			orderByUserIds[po.CustomerId] = make([]*order.Order, 0)
+		}
+		orderByUserIds[po.CustomerId] = append(orderByUserIds[po.CustomerId], &po)
+	}
+
+	users, err := s.userSvc.GetByIds(userIds)
+	if err != nil {
+		return nil
+	}
+
+	for _, u := range users {
+		currPOs := orderByUserIds[u.ID]
+
+		s.sendEmailReminder(u, currPOs)
+
+	}
+	return nil
+}
+
+func (s *service) sendEmailReminder(user user.User, orders []*order.Order) error {
+	for _, o := range orders {
+		productList := make([]string, 0)
+		for _, ou := range o.Units {
+			productList = append(productList, fmt.Sprintf("%d. %s", ou.ProductId, ou.Name))
+		}
+
+		productContent := strings.Join(productList, "\n")
+		link := fmt.Sprintf("%s/%s/%d", "localhost:8080/api/v1", "checkout", o.ID)
+		emailContent := fmt.Sprintf(
+			"Hi %s, segera selesaikan order kamu di %s. Dengan rincian product %s",
+			user.Email,
+			link,
+			productContent)
+
+		// Dummy replace sending email
+		fmt.Println(emailContent)
+	}
+
+	return nil
 }

@@ -50,3 +50,18 @@ func (r *repo) GetUserByEmail(email string) (*user.User, error) {
 
 	return &u, nil
 }
+
+func (r *repo) GetByIds(ids []int) ([]user.User, error) {
+	var users []user.User
+
+	q := r.db.Model(user.User{}).
+		Where("id in (?)", ids).
+		Find(&users)
+
+	err := q.Error
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}

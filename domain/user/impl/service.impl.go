@@ -88,3 +88,7 @@ func (s *service) Login(email, password string) (*user.User, string, error) {
 
 	return u, token, nil
 }
+
+func (s *service) GetByIds(ids []int) ([]user.User, error) {
+	return s.repo.GetByIds(ids)
+}
