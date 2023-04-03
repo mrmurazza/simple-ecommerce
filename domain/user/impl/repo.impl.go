@@ -3,7 +3,7 @@ package impl
 import (
 	"ecommerce/domain/user"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type repo struct {
@@ -37,19 +37,12 @@ func (r *repo) GetUserByUserPass(email, password string) (*user.User, error) {
 		return nil, err
 	}
 
-	if gorm.IsRecordNotFoundError(err) {
-		return nil, nil
-	}
-
 	return &u, nil
 }
 
 func (r *repo) GetUserByEmail(email string) (*user.User, error) {
 	u := user.User{}
 	err := r.db.Model(user.User{}).Where("email = ?", email).First(&u).Error
-	if gorm.IsRecordNotFoundError(err) {
-		return nil, nil
-	}
 
 	if err != nil {
 		return nil, err

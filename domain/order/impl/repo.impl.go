@@ -3,7 +3,7 @@ package impl
 import (
 	"ecommerce/domain/order"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type repo struct {
@@ -18,7 +18,7 @@ func NewRepo(db *gorm.DB) order.Repository {
 
 func (r *repo) SaveOrder(o order.Order) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		res := r.db.Create(&o)
+		res := tx.Create(&o)
 
 		err := res.Error
 		if err != nil {
@@ -26,37 +26,28 @@ func (r *repo) SaveOrder(o order.Order) error {
 		}
 
 		productQtyMap := make(map[int]int)
-		for _, unit := range o.Units {
-			unit.OrderId = o.ID
-			productQtyMap[unit.ProductId] = unit.Qty
+		for idx := range o.Units {
+			o.Units[idx].OrderId = o.ID
+			productQtyMap[o.Units[idx].ProductId] = o.Units[idx].Qty
 		}
 
-		res = r.db.Create(o.Units)
+		res = tx.Create(o.Units)
 		if err != nil {
 			return err
 		}
 
-		err = r.decraseProductStock(productQtyMap)
-		if err != nil {
-			return err
+		// decrease productStock
+		for productId, qty := range productQtyMap {
+			err := tx.Model(&order.Product{}).
+				Where("id = ?", productId).
+				UpdateColumn("qty", gorm.Expr("qty - ?", qty)).Error
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
 	})
-}
-
-func (r *repo) decraseProductStock(productQtyMap map[int]int) error {
-	for productId, qty := range productQtyMap {
-		err := r.db.Model(&order.Product{}).
-			Where("id = ?", productId).
-			UpdateColumn("qty", gorm.Expr("qty - ?", qty)).Error
-		if err != nil {
-			return err
-		}
-
-	}
-
-	return nil
 }
 
 func (r *repo) GetOrderByCustomer(userId int) ([]order.Order, error) {
@@ -69,10 +60,6 @@ func (r *repo) GetOrderByCustomer(userId int) ([]order.Order, error) {
 		Error
 	if err != nil {
 		return nil, err
-	}
-
-	if gorm.IsRecordNotFoundError(err) {
-		return nil, nil
 	}
 
 	orderUnits, err := r.getOrderUnitsByOrders(orders)
@@ -91,10 +78,15 @@ func (r *repo) getOrderUnitsByOrders(orders []order.Order) ([]order.OrderUnit, e
 	}
 
 	var orderUnits []order.OrderUnit
+
+	if len(orderIds) == 0 {
+		return make([]order.OrderUnit, 0), nil
+	}
+
 	err := r.db.Model(order.OrderUnit{}).
 		Where("order_id in ?", orderIds).
 		Order("created_at DESC").
-		Find(&orders).
+		Find(&orderUnits).
 		Error
 	if err != nil {
 		return nil, err
@@ -132,9 +124,6 @@ func (r *repo) GetAllOrders() ([]order.Order, error) {
 		return nil, err
 	}
 
-	if gorm.IsRecordNotFoundError(err) {
-		return nil, nil
-	}
 	return orders, nil
 }
 
@@ -149,26 +138,20 @@ func (r *repo) GetAllProducts() ([]order.Product, error) {
 		return nil, err
 	}
 
-	if gorm.IsRecordNotFoundError(err) {
-		return nil, nil
-	}
 	return products, nil
 }
 
 func (r *repo) GetProductByIds(ids []int) ([]order.Product, error) {
 	var products []order.Product
 
-	err := r.db.Model(order.Product{}).
+	q := r.db.Model(order.Product{}).
 		Order("created_at DESC").
-		Where("id in ?", ids).
-		Find(&products).
-		Error
+		Where("id in (?)", ids).
+		Find(&products)
+	err := q.Error
 	if err != nil {
 		return nil, err
 	}
 
-	if gorm.IsRecordNotFoundError(err) {
-		return nil, nil
-	}
 	return products, nil
 }

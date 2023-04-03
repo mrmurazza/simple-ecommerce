@@ -2,10 +2,10 @@ package database
 
 import (
 	"ecommerce/config"
-	"fmt"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -13,24 +13,22 @@ var DB *gorm.DB
 func InitDatabase() {
 	cfg := config.Get()
 
-	dbResourceName := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
-	if cfg.DBDriver == "sqlite3" {
-		dbResourceName = cfg.DBHost
-	}
+	// dbResourceName := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
+	// if cfg.DBDriver == "sqlite3" {
+	// 	dbResourceName = cfg.DBHost
+	// }
 
-	db, err := gorm.Open(cfg.DBDriver, dbResourceName)
+	db, err := gorm.Open(sqlite.Open(cfg.DBHost), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		panic(err)
 	}
 
 	DB = db
 
-	// set gorm configuration
-	DB.LogMode(true)
-	DB.SingularTable(false)
-
-	err = DB.Exec("CREATE TABLE IF NOT EXISTS customers (" +
-		"`id` integer NOT NULL primary key, " +
+	err = DB.Exec("CREATE TABLE IF NOT EXISTS users (" +
+		"`id` integer NOT NULL primary key AUTOINCREMENT, " +
 		"email varchar(50) not null default ``, " +
 		"name varchar(50) not null default ``, " +
 		"password varchar(50) not null default ``, " +
@@ -44,9 +42,10 @@ func InitDatabase() {
 	}
 
 	err = DB.Exec("CREATE TABLE IF NOT EXISTS products (" +
-		"`id` integer NOT NULL primary key, " +
+		"`id` integer NOT NULL primary key AUTOINCREMENT, " +
 		"name varchar(50) not null default ``, " +
 		"price integer not null default ``, " +
+		"qty integer not null default ``, " +
 		"description varchar(50) not null default ``, " +
 		"image varchar(50) not null default ``, " +
 		"created_at datetime not null default current_timestamp, " +
@@ -58,11 +57,11 @@ func InitDatabase() {
 	}
 
 	err = DB.Exec("CREATE TABLE IF NOT EXISTS orders (" +
-		"`id` integer NOT NULL primary key, " +
+		"`id` integer NOT NULL primary key AUTOINCREMENT, " +
 		"customer_id integer not null , " +
 		"status varchar(50) not null default ``, " +
 		"total_qty integer not null, " +
-		"total_price integer not null, " +
+		"total_amount integer not null, " +
 		"created_at datetime not null default current_timestamp, " +
 		"updated_at datetime not null default current_timestamp, " +
 		"FOREIGN KEY (customer_id) REFERENCES customers(id)" +
@@ -73,7 +72,7 @@ func InitDatabase() {
 	}
 
 	err = DB.Exec("CREATE TABLE IF NOT EXISTS order_units (" +
-		"`id` integer NOT NULL primary key, " +
+		"`id` integer NOT NULL primary key AUTOINCREMENT, " +
 		"order_id integer not null, " +
 		"product_id integer not null, " +
 		"qty integer not null default 1, " +
@@ -88,5 +87,4 @@ func InitDatabase() {
 	if err != nil {
 		panic(err)
 	}
-
 }
